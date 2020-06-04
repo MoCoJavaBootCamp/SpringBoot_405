@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import javax.sql.DataSource;
+
 
 @Configuration
 public class SecConfig extends WebSecurityConfigurerAdapter {
@@ -28,16 +30,14 @@ public class SecConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Autowired
+    private DataSource dataSource;
+
+    @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth.jdbcAuthentication()
-//                .dataSource(dataSource)
-                .withDefaultSchema()
-                .withUser(User.withUsername("admin")
-                    .password(passwordEncoder().encode("admin"))
-                        .roles("ADMIN"))
-                .withUser(User.withUsername("user")
-                    .password(passwordEncoder().encode("user"))
-                    .roles("user"));
+                .dataSource(dataSource)
+                .usersByUsernameQuery("select username, password, enabled from " + "users_db where username=?")
+                .authoritiesByUsernameQuery("select username, role from roles " + "where username=?");
     }
 
     @Bean
